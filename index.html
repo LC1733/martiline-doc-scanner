@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Martiline · Document Scanner & Customs Auditor V4 PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<style>
+:root {
+  --bg:      #0f0f0f;
+  --panel:   #1a1a1a;
+  --panel2:  #222222;
+  --panel3:  #2a2a2a;
+  --text:    #f2f2f2;
+  --muted:   #999999;
+  --line:    #333333;
+  --accent:  #F26522;
+  --accent2: #D4510F;
+  --accent3: #FF9944;
+  --danger:  #ff4444;
+  --warn:    #ffc857;
+  --success: #4caf7d;
+  --radius:  12px;
+  --shadow:  0 4px 24px rgba(0,0,0,0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(242,101,34,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 100% 80%, rgba(212,81,15,0.04) 0%, transparent 60%);
+}
+
+/* ── LOCK SCREEN CORPORATIVA (CLAVE 2026) ── */
+#lock-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 25%, #19130f 0%, #0a0d12 75%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#lock-screen.hidden { display: none; }
+
+.lock-card {
+  width: 100%;
+  max-width: 400px;
+  background: #14181f;
+  border: 1px solid #2e3440;
+  border-top: 3px solid var(--accent);
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.75);
+}
+
+.lock-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #F26522 0%, #D4510F 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 auto 14px;
+  box-shadow: 0 6px 20px rgba(242,101,34,0.4);
+}
+
+.lock-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.lock-sub {
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+
+.lock-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0b0e13;
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 6px;
+  outline: none;
+  margin-bottom: 12px;
+}
+.lock-input:focus { border-color: var(--accent); }
+
+.lock-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.lock-err {
+  color: var(--danger);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  margin-top: 10px;
+  min-height: 16px;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 0 28px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: rgba(5,14,26,0.92);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #F26522 0%, #D4510F 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -1px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(242,101,34,0.4);
+}
+
+.logo-text h1 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.logo-text p {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 1px;
+}
+
+.header-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hbadge {
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255,255,255,0.03);
+}
+
+.hbadge.green { border-color: #F26522; color: #F26522; }
+
+/* ── MAIN LAYOUT ── */
+main {
+  padding: 20px 24px 40px;
+  max-width: 1650px;
+  margin: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  gap: 18px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #F26522;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #F26522;
+  border-radius: 2px;
+}
+
+/* ── FORM ELEMENTS ── */
+label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+
+select, input[type="file"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(5,14,26,0.8);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: 'Syne', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+select:focus { border-color: var(--accent); }
+
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(5,14,26,0.8);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 12px;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  resize: vertical;
+  min-height: 170px;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--muted); opacity: 0.5; }
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+
+button {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 13px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button:active { transform: scale(0.97); }
+
+button.accent {
+  background: linear-gradient(135deg, #F26522 0%, #D4510F 100%);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(242,101,34,0.35);
+}
+button.accent:hover { opacity: 0.88; }
+
+button.secondary {
+  background: var(--panel3);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+button.secondary:hover { border-color: #F26522; color: #F26522; }
+
+button.warn-btn {
+  background: rgba(255,200,87,0.14);
+  color: var(--warn);
+  border: 1px solid rgba(255,200,87,0.35);
+}
+button.warn-btn:hover { background: rgba(255,200,87,0.24); }
+
+button.danger {
+  background: rgba(255,83,112,0.15);
+  color: var(--danger);
+  border: 1px solid rgba(255,83,112,0.3);
+}
+button.danger:hover { background: rgba(255,83,112,0.25); }
+
+/* ── STATUS ── */
+.status {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(5,14,26,0.6);
+  color: var(--muted);
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: pre-wrap;
+  max-height: 90px;
+  overflow: auto;
+  line-height: 1.6;
+  transition: border-color 0.3s;
+}
+
+.status.ok    { border-color: var(--success); color: var(--success); }
+.status.error { border-color: var(--danger);  color: var(--danger); }
+.status.warn  { border-color: var(--warn);    color: var(--warn); }
+
+/* ── OCR PROGRESS ── */
+.ocr-progress-wrap {
+  display: none;
+  margin: 10px 0;
+}
+.ocr-progress-wrap.active { display: block; }
+
+.ocr-label {
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #F26522;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ocr-bar-bg {
+  height: 6px;
+  background: var(--panel3);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.ocr-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #F26522, #FF9944);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* ── BADGES ── */
+.badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.badge {
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255,255,255,0.02);
+}
+
+/* ── KPIS (6 INDICADORES LOGÍSTICOS Y ADUANEROS) ── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.kpi {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #F26522, #FF9944);
+  opacity: 0.8;
+}
+
+.kpi.kpi-alert::before { background: var(--danger); }
+.kpi.kpi-alert .kpi-value { color: var(--danger); }
+.kpi.kpi-ok .kpi-value { color: var(--success); }
+
+.kpi-value {
+  font-size: 19px;
+  font-weight: 800;
+  color: #F26522;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── BANNER DE AUDITORÍA ADUANERA ── */
+.audit-banner {
+  display: none;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.audit-banner.show-ok {
+  display: block;
+  background: rgba(76, 175, 125, 0.1);
+  border: 1px solid rgba(76, 175, 125, 0.4);
+  color: var(--success);
+}
+.audit-banner.show-err {
+  display: block;
+  background: rgba(255, 68, 68, 0.12);
+  border: 1px solid rgba(255, 68, 68, 0.45);
+  color: #ff8080;
+}
+
+/* ── TABLE ── */
+.tablewrap {
+  overflow: auto;
+  max-height: 52vh;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-top: 12px;
+}
+
+table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  background: rgba(5,14,26,0.7);
+}
+
+th, td {
+  border: 1px solid rgba(26,58,92,0.6);
+  padding: 7px 10px;
+  font-size: 11px;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--panel3);
+  color: #F26522;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  font-weight: 500;
+  z-index: 2;
+}
+
+tr:hover td { background: rgba(242,101,34,0.04); }
+
+td[contenteditable=true] {
+  background: rgba(15,15,15,0.5);
+  min-width: 82px;
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+  font-family: 'IBM Plex Mono', monospace;
+  cursor: text;
+}
+
+td[contenteditable=true]:focus {
+  outline: 2px solid #F26522;
+  background: rgba(242,101,34,0.06);
+}
+
+tr.row-flagged td { background: rgba(255,200,87,0.07); }
+tr.row-error td   { background: rgba(255,68,68,0.11); }
+
+.audit-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+.audit-pill.ok   { background: rgba(76,175,125,0.18); color: var(--success); }
+.audit-pill.warn { background: rgba(255,200,87,0.18); color: var(--warn); }
+.audit-pill.err  { background: rgba(255,68,68,0.22);  color: #ff7b7b; }
+
+/* ── PREVIEW ── */
+.preview {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(5,14,26,0.6);
+  color: var(--muted);
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+  line-height: 1.7;
+}
+
+.persist-notice {
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  opacity: 0.7;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent);
+  background: rgba(242,101,34,0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  opacity: 0.6;
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+  opacity: 0.5;
+}
+
+@media (max-width: 1200px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1000px) {
+  .grid { grid-template-columns: 1fr; }
+  .header-badges { display: none; }
+}
+@media (max-width: 520px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  header { padding: 0 16px; }
+  main { padding: 14px 12px 30px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ══ PANTALLA DE BLOQUEO CORPORATIVA ══ -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">M</div>
+    <div class="lock-title">MARTILINE PARSER V4 PRO</div>
+    <div class="lock-sub">ACCESO INTERNO · DOCUMENT SCANNER & AUDITOR</div>
+    <input type="password" id="lock-pass" class="lock-input" placeholder="••••" maxlength="12" onkeydown="if(event.key==='Enter') unlockApp()">
+    <button class="accent lock-btn" onclick="unlockApp()">🔓 DESBLOQUEAR TERMINAL</button>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-area">
+    <div class="logo-mark">M</div>
+    <div class="logo-text">
+      <h1>Martiline Parser V4 PRO · Customs & Packing Auditor</h1>
+      <p>Invoice · Packing List · PDF Nativo & Escaneado (OCR) · Excel · Cuadratura BL/SIDEMAR</p>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge green">🔒 100% Local (Sin Nube)</span>
+    <span class="hbadge">PDF.js + Auto-OCR</span>
+    <span class="hbadge">SheetJS Multi-File</span>
+    <span class="hbadge" id="persistBadge">💾 Sin datos guardados</span>
+    <button class="secondary" style="padding:5px 10px;font-size:10px" onclick="lockApp()">🔒 Bloquear</button>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main>
+<div class="grid">
+
+<!-- ══ PANEL IZQUIERDO ══ -->
+<section class="card">
+  <div class="card-title">1 — Entrada & Configuración</div>
+
+  <label>Tipo de documento</label>
+  <select id="docType" onchange="reparsePreviewText()">
+    <option value="auto">Auto detectar</option>
+    <option value="invoice">Invoice / Factura Comercial</option>
+    <option value="packing">Packing List</option>
+    <option value="mixed">Invoice + Packing List</option>
+  </select>
+
+  <label>Proveedor / Formato Operativo</label>
+  <select id="supplierPattern" onchange="reparsePreviewText()">
+    <option value="auto">Auto detectar</option>
+    <option value="mining_au">Formato Minería Australia (AUD/USD)</option>
+    <option value="mining_in">Formato Minería India (USD)</option>
+    <option value="china_pl">Formato China Bilingüe (CN/EN)</option>
+    <option value="industrial">Formato Industrial / Estándar</option>
+    <option value="generic">Genérico</option>
+  </select>
+
+  <label>Cargar archivos PDF (Nativo o Escaneado) / Excel / CSV / JPG / PNG</label>
+  <input id="fileInput" type="file" multiple accept=".pdf,.xlsx,.xls,.csv,.txt,.jpg,.jpeg,.png">
+
+  <div class="btn-row">
+    <button class="accent" onclick="processFiles()">⚡ Procesar archivos</button>
+    <button class="secondary" onclick="clearAll()">✕ Limpiar</button>
+  </div>
+
+  <!-- OCR Progress -->
+  <div class="ocr-progress-wrap" id="ocrWrap">
+    <div class="ocr-label">
+      <span id="ocrLabel">OCR en progreso...</span>
+      <span id="ocrPct">0%</span>
+    </div>
+    <div class="ocr-bar-bg">
+      <div class="ocr-bar-fill" id="ocrBar"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <label>O pegar texto / tabla copiada desde Excel, PDF o Correo</label>
+  <textarea id="rawText" placeholder="Pega aquí texto o celdas copiadas desde Invoice, Packing List, PDF, ERP CargoES, etc. (Conserva tabuladores automáticamente)"></textarea>
+
+  <div class="btn-row">
+    <button class="accent" onclick="parseFromTextarea()">▶ Parsear texto</button>
+    <button class="secondary" onclick="loadDemo()">Demo Minería AU/IN</button>
+    <button class="secondary" onclick="loadDemoGeneric()">Demo Estándar</button>
+    <button class="secondary" onclick="loadDemoChina()">Demo Packing China</button>
+    <button class="warn-btn" onclick="loadDemoDiscrepancy()">⚠ Demo Discrepancia</button>
+  </div>
+
+  <div class="status" id="status">Listo. Carga uno o varios archivos o pega texto.</div>
+
+  <hr class="divider">
+
+  <div class="card-title" style="margin-bottom:10px">Campos Auditados</div>
+  <div class="badges-wrap" id="badges"></div>
+
+  <p class="note">
+    🔒 <strong>Procesamiento 100% Confidencial:</strong> Ningún documento sale de tu equipo.<br>
+    • Si subes un <strong>PDF escaneado</strong> sin texto seleccionable, el motor activa <strong>OCR automático</strong> página por página.<br>
+    • El <strong>Validador Aduanero</strong> verifica <code>Qty × Unit Price = Amount</code> y alerta si <code>N.W. &gt; G.W.</code> antes de declarar en SNA / SUNAT o SIDEMAR.
+  </p>
+
+  <div class="persist-notice">
+    💾 <span id="persistInfo">Los datos se guardan automáticamente en este navegador.</span>
+  </div>
+</section>
+
+<!-- ══ PANEL DERECHO ══ -->
+<section class="card">
+
+  <!-- 6 KPIs Operativos y de Cuadratura -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-value" id="kRows">0</div>
+      <div class="kpi-label">Ítems / Filas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value" id="kInvoices">0</div>
+      <div class="kpi-label">Invoices / Docs</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value" id="kQty">0</div>
+      <div class="kpi-label">Qty Total</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value" id="kAmount">0,00</div>
+      <div class="kpi-label">Monto Total</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value" id="kWeight">0,00</div>
+      <div class="kpi-label">G.W. Bruto (kg)</div>
+    </div>
+    <div class="kpi" id="kpiAuditCard">
+      <div class="kpi-value" id="kAudit">✓ OK</div>
+      <div class="kpi-label" id="kAuditLabel">Vol: 0,00 m³</div>
+    </div>
+  </div>
+
+  <div id="auditBanner" class="audit-banner"></div>
+
+  <div class="card-title">2 — Resultado Editable & Cuadratura Aduanera</div>
+
+  <div class="btn-row">
+    <button class="accent" onclick="exportXLSX()">📥 Exportar Excel (.xlsx)</button>
+    <button class="secondary" onclick="exportCSV()">📄 Exportar CSV</button>
+    <button class="secondary" onclick="addEmptyRow()">+ Agregar fila</button>
+    <button class="secondary" onclick="reparsePreviewText()">↺ Reprocesar</button>
+    <button class="danger" onclick="deleteSelectedRows()">🗑 Eliminar seleccionadas</button>
+  </div>
+
+  <div class="tablewrap">
+    <table id="resultTable"></table>
+  </div>
+
+  <div class="card-title" style="margin-top:18px;margin-bottom:8px">Texto extraído / Vista previa de auditoría</div>
+  <div class="preview" id="preview">El texto extraído aparecerá aquí...</div>
+
+</section>
+</div>
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer id="footer"></footer>
+
+<!-- ══ SCRIPT ══ -->
+<script>
+// ── Bloqueo con Clave Corporativa (2026) ──
+const ACCESS_PIN = "2026";
+const SESSION_LOCK_KEY = "martiline_parser_v4_unlocked";
+
+function unlockApp() {
+  const val = document.getElementById("lock-pass").value.trim();
+  if (val === ACCESS_PIN) {
+    document.getElementById("lock-screen").classList.add("hidden");
+    document.getElementById("lock-err").textContent = "";
+    try { sessionStorage.setItem(SESSION_LOCK_KEY, "1"); } catch(e) {}
+  } else {
+    document.getElementById("lock-err").textContent = "⛔ Clave incorrecta. Solicite autorización a Gerencia.";
+  }
+}
+
+function lockApp() {
+  try { sessionStorage.removeItem(SESSION_LOCK_KEY); } catch(e) {}
+  document.getElementById("lock-pass").value = "";
+  document.getElementById("lock-screen").classList.remove("hidden");
+}
+
+try {
+  if (sessionStorage.getItem(SESSION_LOCK_KEY) === "1") {
+    document.getElementById("lock-screen").classList.add("hidden");
+  }
+} catch(e) {}
+
+// ── Copyright dinámico ──
+const YEAR = new Date().getFullYear();
+document.getElementById("footer").textContent =
+  `© ${YEAR} Luis Cartes Henríquez · Martiline Global Logistics · Creación original protegida — Convenio de Berna / OMPI · Prohibida su reproducción o uso sin autorización expresa.`;
+
+// ── PDF.js worker ──
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+// ── Columnas (Incluye columna Audit para validación aduanera) ──
+const COLUMNS = [
+  "Sel","#","Audit","Invoice No","PO No","Part No","Description","Qty","UOM",
+  "N.W.(kg)","G.W.(kg)","Vol.(m3)","Crate#","HS Code",
+  "Unit Price","Currency","Amount","Supplier","Origin","Notes"
+];
+
+let rows = [];
+let lastExtractedText = "";
+let lastExcelStructure = null;
+
+// ── Badges ──
+document.getElementById("badges").innerHTML =
+  COLUMNS.filter(c => c !== "Sel")
+    .map(c => `<span class="badge">${c}</span>`).join("");
+
+// ══════════════════════════════════════
+//  UTILIDADES (Preserva Tabuladores \t)
+// ══════════════════════════════════════
+function setStatus(msg, type = "") {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status" + (type ? " " + type : "");
+}
+
+function cleanText(t, preserveTabs = true) {
+  let s = String(t || "").replace(/\r/g, "\n");
+  if (preserveTabs) {
+    s = s.replace(/ +/g, " ");
+  } else {
+    s = s.replace(/[ \t]+/g, " ");
+  }
+  return s.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function unique(a) { return [...new Set(a.filter(Boolean))]; }
+
+function normalizeDecimal(v) {
+  if (v === undefined || v === null) return "";
+  let s = String(v).trim().replace(/\s/g, "");
+  if (!s) return "";
+  if (/^\d+,\d+$/.test(s)) return s;
+  if (/^\d{1,3}(,\d{3})+\.\d+$/.test(s)) return s.replace(/,/g, "").replace(".", ",");
+  if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) return s.replace(/\./g, "");
+  if (/^\d+\.\d+$/.test(s)) return s.replace(".", ",");
+  return s;
+}
+
+function parseNumber(v) {
+  if (v === undefined || v === null || v === "") return 0;
+  let s = String(v).trim().replace(/\s/g, "");
+  if (/^\d{1,3}(,\d{3})+\.\d+$/.test(s)) {
+    s = s.replace(/,/g, "");
+  } else if (/^\d{1,3}(\.\d{3})+,\d+$/.test(s)) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(",") && !s.includes(".")) {
+    s = s.replace(",", ".");
+  }
+  let n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function makeRow(data) {
+  const r = {};
+  COLUMNS.forEach(c => { if (c !== "Sel") r[c] = ""; });
+  Object.assign(r, data || {});
+  return r;
+}
+
+// ══════════════════════════════════════
+//  VALIDADOR DE CUADRATURA ADUANERA
+// ══════════════════════════════════════
+function auditRow(r) {
+  const issues = [];
+  const qty = parseNumber(r["Qty"]);
+  const unitPrice = parseNumber(r["Unit Price"]);
+  const amount = parseNumber(r["Amount"]);
+  const nw = parseNumber(r["N.W.(kg)"]);
+  const gw = parseNumber(r["G.W.(kg)"]);
+
+  // 1. Validar Qty * Unit Price = Amount (Tolerancia 0.05 por redondeo)
+  if (qty > 0 && unitPrice > 0 && amount > 0) {
+    const expected = qty * unitPrice;
+    const diff = Math.abs(expected - amount);
+    if (diff > 0.05 && (diff / expected) > 0.002) {
+      issues.push(`Descuadre: ${qty} × ${unitPrice.toFixed(2)} = ${expected.toFixed(2)} (Dice ${amount.toFixed(2)})`);
+    }
+  }
+
+  // 2. Validar Peso Neto <= Peso Bruto
+  if (nw > 0 && gw > 0 && nw > gw) {
+    issues.push(`Peso inválido: N.W. (${nw} kg) > G.W. (${gw} kg)`);
+  }
+
+  // 3. Validar HS Code cuando hay monto comercial
+  const hs = String(r["HS Code"] || "").trim();
+  if (hs && !/^(\d{4}\.?\d{2}|\d{6,10})$/.test(hs.replace(/\s/g, ""))) {
+    issues.push(`HS Code atípico (${hs})`);
+  }
+
+  if ((r["Notes"] || "").includes("Fallback")) {
+    issues.push("Extracción parcial (verificar fila)");
+  }
+
+  if (issues.length > 0) {
+    const isCritical = issues.some(x => x.startsWith("Descuadre") || x.startsWith("Peso inválido"));
+    r["Audit"] = (isCritical ? "⛔ " : "⚠️ ") + issues.join(" | ");
+    r._auditState = isCritical ? "err" : "warn";
+  } else {
+    r["Audit"] = "✓ OK";
+    r._auditState = "ok";
+  }
+  return r;
+}
+
+// ══════════════════════════════════════
+//  DETECCIÓN AUTOMÁTICA + SELECTORES UI
+// ══════════════════════════════════════
+function getSelectedSupplierOverride() {
+  const sel = document.getElementById("supplierPattern").value;
+  const map = {
+    mining_au:  { supplier: "Mining Equipment Supplier (AU)", origin: "Australia", curr: "AUD" },
+    mining_in:  { supplier: "Mining Equipment Supplier (IN)", origin: "India",     curr: "USD" },
+    china_pl:   { supplier: "China Manufacturing Co.",        origin: "China",     curr: "USD" },
+    industrial: { supplier: "Industrial Supplier",            origin: "",          curr: "USD" }
+  };
+  return map[sel] || null;
+}
+
+function guessSupplier(text) {
+  const over = getSelectedSupplierOverride();
+  if (over && over.supplier) return over.supplier;
+  const m = text.match(/(?:Supplier|Vendor|Exporter|Shipper|Manufacturer)\s*[:\-]\s*([^\n\r\t]{3,60})/i);
+  if (m) return m[1].trim();
+  return "";
+}
+
+function guessOrigin(text) {
+  const over = getSelectedSupplierOverride();
+  if (over && over.origin) return over.origin;
+  const t = text.toUpperCase();
+  if (t.includes("AUSTRALIA")) return "Australia";
+  if (t.includes("INDIA")) return "India";
+  if (t.includes("PERU") || t.includes("PERÚ")) return "Peru";
+  if (t.includes("CHINA") || /[\u4e00-\u9fa5]/.test(text)) return "China";
+  if (t.includes("CHILE")) return "Chile";
+  if (t.includes("UNITED STATES") || t.includes("USA")) return "USA";
+  if (t.includes("SWEDEN") || t.includes("SUECIA")) return "Sweden";
+  if (t.includes("GERMANY") || t.includes("ALEMANIA")) return "Germany";
+  return "";
+}
+
+function findInvoiceNo(text) {
+  const pats = [
+    /Delivery\s*NO\.?\s*[:\s]\s*([0-9A-Z\-]{5,18})/i,
+    /Commercial\s*Invoice\s*(?:No|Number|#)?\s*[:\s]\s*([0-9A-Z\-]{4,18})/i,
+    /Invoice\s*(?:No|Number|#)?\s*[:\s]\s*([0-9A-Z\-]{4,18})/i,
+    /\b(INV[\-0-9A-Z]{4,15})\b/i,
+    /\b(9[0-9]{9}|90[0-9]{8}|94[0-9]{8})\b/,
+    /\bFACTURA\s*N[°o]?\s*[:\s]*([0-9A-Z\-]{4,16})/i
+  ];
+  for (const p of pats) {
+    const m = text.match(p);
+    if (m) return m[1] || "";
+  }
+  return "";
+}
+
+function detectCurrency(text) {
+  const over = getSelectedSupplierOverride();
+  const t = text.toUpperCase();
+  for (const c of ["AUD", "USD", "EUR", "GBP", "CLP", "PEN", "CNY", "RMB"]) {
+    if (new RegExp("\\b" + c + "\\b").test(t)) return c === "RMB" ? "CNY" : c;
+  }
+  return over ? over.curr : "";
+}
+
+// ══════════════════════════════════════
+//  OCR PROGRESS BAR
+// ══════════════════════════════════════
+function showOcrProgress(visible) {
+  document.getElementById("ocrWrap").className =
+    "ocr-progress-wrap" + (visible ? " active" : "");
+}
+function updateOcrProgress(pct, label) {
+  document.getElementById("ocrBar").style.width = pct + "%";
+  document.getElementById("ocrPct").textContent = Math.round(pct) + "%";
+  document.getElementById("ocrLabel").textContent = label || "OCR en progreso...";
+}
+
+// ══════════════════════════════════════
+//  PROCESAMIENTO MULTIFILE (PDF + OCR + EXCEL)
+// ══════════════════════════════════════
+async function processFiles() {
+  const files = Array.from(document.getElementById("fileInput").files || []);
+  if (!files.length) { setStatus("No hay archivos seleccionados.", "warn"); return; }
+  let all = "";
+  lastExcelStructure = {}; // Acumula múltiples archivos Excel sin sobrescribir
+
+  for (const file of files) {
+    setStatus("Procesando: " + file.name);
+    const name = file.name.toLowerCase();
+    try {
+      if (name.endsWith(".pdf"))
+        all += "\n\n--- FILE: " + file.name + " ---\n" + await extractPdfTextWithAutoOCR(file);
+      else if (name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv"))
+        all += "\n\n--- FILE: " + file.name + " ---\n" + await extractExcelText(file);
+      else if (name.endsWith(".txt"))
+        all += "\n\n--- FILE: " + file.name + " ---\n" + await file.text();
+      else if (/\.(jpe?g|png)$/.test(name))
+        all += "\n\n--- OCR: " + file.name + " ---\n" + await extractImageOCR(file);
+      else
+        all += "\n\nArchivo no soportado: " + file.name;
+    } catch (e) {
+      all += "\n\nERROR " + file.name + ": " + e.message;
+      setStatus("Error en " + file.name + ": " + e.message, "error");
+    }
+  }
+  showOcrProgress(false);
+  lastExtractedText = cleanText(all, true);
+  document.getElementById("preview").textContent = lastExtractedText.slice(0, 14000);
+
+  let parsedRows = [];
+  if (lastExcelStructure && Object.keys(lastExcelStructure).length > 0) {
+    parsedRows = parseExcelStructured(lastExcelStructure);
+  }
+  if (!parsedRows.length) {
+    parsedRows = parseMartiline(lastExtractedText);
+  }
+  rows = parsedRows.map(auditRow);
+  renderTable();
+  persistData();
+  setStatus(`✓ Archivos procesados: ${files.length}  |  Filas auditadas: ${rows.length}`, "ok");
+}
+
+// ── PDF con fallback automático a OCR si la página es escaneada ──
+async function extractPdfTextWithAutoOCR(file) {
+  if (!window.pdfjsLib) throw new Error("PDF.js no cargó.");
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const items = content.items || [];
+    let pageText = "";
+
+    if (items.length > 3) {
+      const sorted = items.slice().sort((a, b) => {
+        const ay = Math.round(a.transform[5]), by = Math.round(b.transform[5]);
+        if (Math.abs(by - ay) > 2) return by - ay;
+        return a.transform[4] - b.transform[4];
+      });
+      let lastY = null;
+      for (const it of sorted) {
+        const y = Math.round(it.transform[5]);
+        if (lastY !== null && Math.abs(y - lastY) > 3) pageText += "\n";
+        pageText += it.str + " ";
+        lastY = y;
+      }
+    }
+
+    // Si la página tiene menos de 15 caracteres útiles, es un PDF escaneado -> OCR en Canvas
+    if (pageText.replace(/\s/g, "").length < 15 && window.Tesseract) {
+      showOcrProgress(true);
+      updateOcrProgress(0, `PDF Escaneado — OCR Pág ${i}/${pdf.numPages}...`);
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const res = await Tesseract.recognize(canvas, "eng+spa", {
+        logger: m => {
+          if (m.status === "recognizing text") {
+            updateOcrProgress((m.progress || 0) * 100, `OCR PDF Pág ${i}/${pdf.numPages}`);
+          }
+        }
+      });
+      pageText = res.data.text || "";
+    }
+
+    text += pageText + "\n\n";
+  }
+  return cleanText(text, true);
+}
+
+async function extractExcelText(file) {
+  if (!window.XLSX) throw new Error("SheetJS no cargó.");
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type: "array", cellFormula: false, cellDates: true });
+  let out = "";
+  if (!lastExcelStructure) lastExcelStructure = {};
+
+  wb.SheetNames.forEach(s => {
+    const ws = wb.Sheets[s];
+    const matrix = [];
+    const ref = ws["!ref"];
+    const uniqueSheetKey = `${file.name}::${s}`;
+    if (!ref) { lastExcelStructure[uniqueSheetKey] = []; return; }
+    const range = XLSX.utils.decode_range(ref);
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const row = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        let v = "";
+        if (cell) {
+          if (cell.t === "n") v = cell.v;
+          else if (cell.t === "d") v = cell.v instanceof Date ? cell.v.toISOString().slice(0,10) : String(cell.v);
+          else if (cell.t === "f") v = "";
+          else v = cell.v !== undefined ? String(cell.v) : "";
+        }
+        row.push(v === null || v === undefined ? "" : String(v));
+      }
+      matrix.push(row);
+    }
+    lastExcelStructure[uniqueSheetKey] = matrix;
+    const csvLines = matrix.map(row => row.join("\t"));
+    out += "\n--- SHEET: " + uniqueSheetKey + " ---\n" + csvLines.join("\n") + "\n";
+  });
+  return out;
+}
+
+async function extractImageOCR(file) {
+  if (!window.Tesseract) throw new Error("Tesseract.js no cargó.");
+  showOcrProgress(true);
+  updateOcrProgress(0, "Iniciando OCR...");
+  const res = await Tesseract.recognize(file, "eng+spa", {
+    logger: m => {
+      if (m.status === "recognizing text") {
+        const pct = (m.progress || 0) * 100;
+        updateOcrProgress(pct, `OCR: ${file.name}`);
+      } else if (m.status) {
+        updateOcrProgress(0, m.status);
+      }
+    }
+  });
+  updateOcrProgress(100, "OCR completado ✓");
+  setTimeout(() => showOcrProgress(false), 1500);
+  return res.data.text || "";
+}
+
+// ══════════════════════════════════════
+//  PARSEO DESDE TEXTAREA (Detecta TSV/Tablas y Texto)
+// ══════════════════════════════════════
+function parseFromTextarea() {
+  const raw = document.getElementById("rawText").value;
+  const text = cleanText(raw, true);
+  if (!text) { setStatus("No hay texto pegado.", "warn"); return; }
+  lastExtractedText = text;
+  document.getElementById("preview").textContent = text.slice(0, 14000);
+  rows = parseMartiline(text).map(auditRow);
+  renderTable();
+  persistData();
+  setStatus(`✓ Texto procesado  |  Filas detectadas y auditadas: ${rows.length}`, "ok");
+}
+
+function reparsePreviewText() {
+  if (!lastExtractedText) return;
+  rows = parseMartiline(lastExtractedText).map(auditRow);
+  renderTable();
+  persistData();
+  setStatus(`↺ Reprocesado con configuración actual  |  Filas: ${rows.length}`, "ok");
+}
+
+// ══════════════════════════════════════
+//  PARSER EXCEL COLUMNAR + TABLAS TSV
+// ══════════════════════════════════════
+function parseExcelStructured(structure) {
+  let allRows = [];
+  for (const sheetName of Object.keys(structure)) {
+    const matrix = structure[sheetName];
+    if (!matrix || matrix.length < 2) continue;
+    const sheetRows = parseSheetMatrix(matrix, sheetName);
+    allRows = allRows.concat(sheetRows);
+  }
+  allRows = allRows.map((r, i) => { r["#"] = i + 1; return r; });
+  return dedupeRows(allRows);
+}
+
+// Mapeos bilingüe chino→inglés para Packing Lists de China
+const CN_MAP = {
+  "品名": "Description",
+  "材料": "Notes",
+  "用途": "Notes",
+  "供应商": "Supplier",
+  "提货地址": "Origin",
+  "数量": "Qty",
+  "单价": "Unit Price",
+  "金额": "Amount",
+  "重量": "N.W.(kg)",
+  "净重": "N.W.(kg)",
+  "毛重": "G.W.(kg)",
+  "体积": "Vol.(m3)",
+  "箱号": "Crate#",
+  "HS编码": "HS Code",
+  "货币": "Currency"
+};
+
+// Mapeos inglés (WEPS PO# va a Notes para no pisar el Delivery/Invoice No)
+const EN_MAP = {
+  "part#": "Part No", "part no": "Part No", "part number": "Part No", "part no.": "Part No",
+  "delivery no": "Invoice No", "delivery no.": "Invoice No", "invoice no": "Invoice No", "invoice no.": "Invoice No",
+  "weps po#": "Notes", "weps po sort": "Notes",
+  "po#": "PO No", "po no": "PO No", "po no.": "PO No", "p.o. no.": "PO No",
+  "item no.": "Notes", "item no": "Notes",
+  "qty.": "Qty", "qty": "Qty", "quantity": "Qty",
+  "uom": "UOM", "unit": "UOM",
+  "n. w.(kgs)": "N.W.(kg)", "n.w.(kg)": "N.W.(kg)", "n.w.(kgs)": "N.W.(kg)", "net weight": "N.W.(kg)",
+  "g. w.(kgs)": "G.W.(kg)", "g.w.(kg)": "G.W.(kg)", "g.w.(kgs)": "G.W.(kg)", "gross weight": "G.W.(kg)",
+  "meas.(m3)": "Vol.(m3)", "volume(m3)": "Vol.(m3)", "vol.(m3)": "Vol.(m3)", "cbm": "Vol.(m3)",
+  "crate#": "Crate#", "crate": "Crate#",
+  "hs code": "HS Code", "hs": "HS Code",
+  "unit price": "Unit Price", "price": "Unit Price",
+  "amount": "Amount", "total": "Amount", "total amount": "Amount",
+  "currency": "Currency", "curr.": "Currency",
+  "supplier": "Supplier", "vendor": "Supplier", "manufacturer": "Supplier",
+  "origin": "Origin", "country of origin": "Origin",
+  "description": "Description", "item description": "Description", "goods description": "Description",
+  "ready date": "Notes"
+};
+
+function normalizeHeader(h) {
+  if (!h) return "";
+  return String(h).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function mapHeader(h) {
+  const n = normalizeHeader(h);
+  if (EN_MAP[n]) return EN_MAP[n];
+  if (CN_MAP[String(h || "").trim()]) return CN_MAP[String(h || "").trim()];
+  return null;
+}
+
+function isFormula(v) {
+  return typeof v === "string" && v.startsWith("=");
+}
+
+function isTotalRow(row) {
+  const joined = row.map(v => String(v).toLowerCase()).join(" ").trim();
+  return /^(total|subtotal|sum|grand total|小计|合计)\b/.test(joined);
+}
+
+function parseSheetMatrix(matrix) {
+  let headerRowIdx = -1;
+  let colMap = {};
+
+  for (let r = 0; r < Math.min(matrix.length, 30); r++) {
+    const row = matrix[r];
+    const mapped = {};
+    let hits = 0;
+    for (let c = 0; c < row.length; c++) {
+      const field = mapHeader(String(row[c] || ""));
+      if (field) { mapped[c] = field; hits++; }
+    }
+    if (hits >= 3) {
+      headerRowIdx = r;
+      colMap = mapped;
+      break;
+    }
+  }
+
+  if (headerRowIdx < 0) return [];
+
+  let docInvoiceNo = "", docSupplier = "", docOrigin = "", docCurrency = "";
+  for (let r = 0; r < headerRowIdx; r++) {
+    const row = matrix[r];
+    const line = row.map(v => String(v || "")).join(" ");
+    if (!docInvoiceNo) docInvoiceNo = findInvoiceNo(line);
+    if (!docSupplier)  docSupplier  = guessSupplier(line);
+    if (!docOrigin)    docOrigin    = guessOrigin(line);
+    if (!docCurrency)  docCurrency  = detectCurrency(line);
+    for (let c = 0; c < row.length - 1; c++) {
+      const label = String(row[c] || "").toLowerCase();
+      if (/delivery\s*no/i.test(label) && row[c+1]) docInvoiceNo = String(row[c+1]).trim();
+    }
+  }
+
+  const out = [];
+  for (let r = headerRowIdx + 1; r < matrix.length; r++) {
+    const row = matrix[r];
+    const nonEmpty = row.filter(v => v !== "" && v !== null && v !== undefined);
+    if (nonEmpty.length < 2) continue;
+    if (isTotalRow(row)) continue;
+    if (nonEmpty.every(v => isFormula(String(v)))) continue;
+
+    const record = makeRow({
+      "Invoice No": docInvoiceNo,
+      "Supplier":   docSupplier,
+      "Origin":     docOrigin || (docSupplier ? guessOrigin(docSupplier) : ""),
+      "Currency":   docCurrency,
+      "UOM":        "PCS"
+    });
+
+    let hasData = false;
+    for (const [cIdx, fieldName] of Object.entries(colMap)) {
+      const rawCell = row[parseInt(cIdx)];
+      if (rawCell === "" || rawCell === null || rawCell === undefined) continue;
+      if (isFormula(String(rawCell))) continue;
+      const strVal = String(rawCell).trim();
+      if (!strVal) continue;
+
+      const headerName = String(matrix[headerRowIdx][parseInt(cIdx)] || "").trim();
+      if (fieldName === "Notes") {
+        const tag = headerName ? `${headerName}: ${strVal}` : strVal;
+        record["Notes"] = record["Notes"] ? `${record["Notes"]} | ${tag}` : tag;
+      } else if (fieldName === "Description" && record["Description"]) {
+        record["Description"] += " " + strVal;
+      } else {
+        record[fieldName] = strVal;
+      }
+      hasData = true;
+    }
+
+    if (!hasData) continue;
+
+    if (!record["Origin"] && /[\u4e00-\u9fa5]/.test(record["Description"] + record["Supplier"])) {
+      record["Origin"] = "China";
+    }
+    record["Unit Price"] = normalizeDecimal(record["Unit Price"]);
+    record["Amount"]     = normalizeDecimal(record["Amount"]);
+    record["N.W.(kg)"]   = normalizeDecimal(record["N.W.(kg)"]);
+    record["G.W.(kg)"]   = normalizeDecimal(record["G.W.(kg)"]);
+    record["Vol.(m3)"]   = normalizeDecimal(record["Vol.(m3)"]);
+
+    if (record["Description"]) {
+      record["Description"] = record["Description"].replace(/\s+/g, " ").trim().slice(0, 150);
+    }
+
+    out.push(record);
+  }
+  return out;
+}
+
+// ══════════════════════════════════════
+//  PARSER PRINCIPAL DE TEXTO Y TABLAS
+// ══════════════════════════════════════
+function parseMartiline(text) {
+  text = cleanText(text, true);
+
+  // 1. Si el texto pegado tiene tabuladores (ej. copiado de Excel o Demo China), usar parser matricial primero
+  if (text.includes("\t")) {
+    const matrix = text.split(/\n/).map(line => line.split("\t"));
+    const tabRows = parseSheetMatrix(matrix);
+    if (tabRows.length > 0) {
+      return dedupeRows(tabRows.map((r, i) => { r["#"] = i + 1; return r; }));
+    }
+  }
+
+  const cleanNoTabs = cleanText(text, false);
+  const invoiceNo      = findInvoiceNo(cleanNoTabs);
+  const supplier       = guessSupplier(cleanNoTabs);
+  const origin         = guessOrigin(cleanNoTabs);
+  const currencyGlobal = detectCurrency(cleanNoTabs);
+  const lines = cleanNoTabs.split(/\n/).map(x => x.trim()).filter(Boolean);
+
+  let result = [];
+  result = result.concat(parsePatternLines(lines, invoiceNo, supplier, origin, currencyGlobal));
+  if (!result.length)
+    result = result.concat(parseGenericLines(lines, invoiceNo, supplier, origin, currencyGlobal));
+  if (!result.length)
+    result = result.concat(parseFallback(cleanNoTabs, invoiceNo, supplier, origin, currencyGlobal));
+
+  result = result.map((r, i) => {
+    r["#"] = i + 1;
+    r["Invoice No"] = r["Invoice No"] || invoiceNo;
+    r["Supplier"]   = r["Supplier"]   || supplier;
+    r["Origin"]     = r["Origin"]     || origin;
+    r["Currency"]   = r["Currency"]   || currencyGlobal;
+    r["Unit Price"] = normalizeDecimal(r["Unit Price"]);
+    r["Amount"]     = normalizeDecimal(r["Amount"]);
+    return r;
+  });
+  return dedupeRows(result);
+}
+
+// Patrón estructurado de líneas con PO + Part No + HS Code + Moneda
+function parsePatternLines(lines, invoiceNo, supplier, origin, currencyGlobal) {
+  let out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const full = lines[i].replace(/\s+/g, " ");
+    const rx = /^\s*(\d+)?\s*(9\d{9}|90\d{8}|94\d{8}|INV[\-0-9A-Z]+)?\s*(45\d{8})\s+([A-Z0-9][A-Z0-9\/\-]{3,35})\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s+(PCS|EA|UN|SET|KG|M|MT|LTR|L)\s+(?:([A-Z]{2,}\d{2,})\s+)?(\d{4}\.\d{2}|\d{8})\s+([0-9]+[.,][0-9]{2,})\s+(AUD|USD|EUR|GBP|CLP|PEN|CNY)\s+([0-9]+[.,][0-9]{2,})(.*)$/i;
+    const m = full.match(rx);
+    if (m) {
+      const tail = m[13] || "";
+      const rowOrigin = guessOrigin(tail) || origin;
+      out.push(makeRow({
+        "Invoice No":  m[2] || invoiceNo,
+        "PO No":       m[3],
+        "Part No":     m[4],
+        "Description": cleanDescription(m[5]),
+        "Qty":         m[6],
+        "UOM":         m[7].toUpperCase(),
+        "Crate#":      m[8] || "",
+        "HS Code":     m[9],
+        "Unit Price":  m[10],
+        "Currency":    m[11].toUpperCase(),
+        "Amount":      m[12],
+        "Supplier":    supplier || extractSupplierFromTail(tail),
+        "Origin":      rowOrigin,
+        "Notes":       cleanNotes(extractNearbyNotes([full]))
+      }));
+    }
+  }
+  return out;
+}
+
+function extractSupplierFromTail(tail) {
+  const m = tail.match(/([A-Za-z0-9\s\(\)\.\-]+(?:Ltd|Limited|Inc|SpA|S\.A\.|Corp|GmbH))/i);
+  return m ? m[1].trim() : "";
+}
+
+// Patrón genérico mejorado (detecta pesos N.W./G.W. opcionales o precios)
+function parseGenericLines(lines, invoiceNo, supplier, origin, currencyGlobal) {
+  let out = [];
+  let headerIdx = -1;
+  const headerPats = [
+    /part\s*(no|number|#)/i,
+    /description/i,
+    /qty|quantity/i,
+    /unit\s*price|n\.?w\.?/i,
+    /amount|total|g\.?w\.?/i
+  ];
+  for (let i = 0; i < Math.min(lines.length, 40); i++) {
+    const matches = headerPats.filter(p => p.test(lines[i])).length;
+    if (matches >= 3) { headerIdx = i; break; }
+  }
+
+  const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
+
+  for (let i = startIdx; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^(total|subtotal|grand total)\b/i.test(line)) continue;
+
+    const priceMatch = line.match(/([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/g);
+    const qtyMatch   = line.match(/\b(\d+(?:[.,]\d+)?)\s*(PCS|EA|UN|SET|KG|M|MT|LTR|L|PC|NOS|EACH)\b/i);
+    const partMatch  = line.match(/^([A-Z0-9][A-Z0-9\/\-]{3,24})\b/);
+    const hsMatch    = line.match(/\b(\d{4}\.\d{2}|\d{8})\b/);
+    const nwMatch    = line.match(/N\.?W\.?\s*[:=]?\s*(\d+(?:[.,]\d+)?)/i);
+    const gwMatch    = line.match(/G\.?W\.?\s*[:=]?\s*(\d+(?:[.,]\d+)?)/i);
+
+    if (priceMatch && priceMatch.length >= 1 && (qtyMatch || partMatch)) {
+      let desc = line;
+      if (partMatch) desc = desc.replace(partMatch[0], "");
+      if (qtyMatch)  desc = desc.replace(qtyMatch[0], "");
+      if (hsMatch)   desc = desc.replace(hsMatch[0], "");
+      if (nwMatch)   desc = desc.replace(nwMatch[0], "");
+      if (gwMatch)   desc = desc.replace(gwMatch[0], "");
+      desc = desc
+        .replace(/[0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2}/g, "")
+        .replace(/\s+/g, " ").trim();
+
+      if (desc.length < 2) continue;
+
+      out.push(makeRow({
+        "Invoice No":  invoiceNo,
+        "Part No":     partMatch ? partMatch[1] : "",
+        "Description": desc.slice(0, 120),
+        "Qty":         qtyMatch ? qtyMatch[1] : "",
+        "UOM":         qtyMatch ? qtyMatch[2].toUpperCase() : "PCS",
+        "N.W.(kg)":    nwMatch ? normalizeDecimal(nwMatch[1]) : "",
+        "G.W.(kg)":    gwMatch ? normalizeDecimal(gwMatch[1]) : "",
+        "HS Code":     hsMatch ? hsMatch[1] : "",
+        "Unit Price":  priceMatch[0] || "",
+        "Currency":    currencyGlobal,
+        "Amount":      priceMatch[1] || priceMatch[0] || "",
+        "Supplier":    supplier,
+        "Origin":      origin,
+        "Notes":       ""
+      }));
+    }
+  }
+  return out;
+}
+
+// Fallback de último recurso
+function parseFallback(text, invoiceNo, supplier, origin, currencyGlobal) {
+  const out = [];
+  const po   = unique(text.match(/\b45\d{8}\b/g) || []);
+  const part = unique(text.match(/\b[A-Z]{1,4}\d{2,}[A-Z0-9\/\-]{2,}\b/g) || []);
+  const hs   = unique(text.match(/\b\d{4}\.\d{2}\b|\b\d{8}\b/g) || []);
+  const amt  = unique(text.match(/\b\d+[.,]\d{2}\b/g) || []);
+  const max  = Math.max(po.length, part.length, hs.length, Math.floor(amt.length / 2), 1);
+  for (let i = 0; i < max; i++) {
+    out.push(makeRow({
+      "Invoice No":  invoiceNo,
+      "PO No":       po[i] || po[0] || "",
+      "Part No":     part[i] || "",
+      "HS Code":     hs[i] || "",
+      "Unit Price":  amt[i*2] || "",
+      "Currency":    currencyGlobal,
+      "Amount":      amt[i*2+1] || "",
+      "Supplier":    supplier,
+      "Origin":      origin,
+      "Notes":       "⚠ Fallback — revisar manualmente"
+    }));
+  }
+  return out;
+}
+
+function cleanDescription(s) {
+  return String(s || "").replace(/\s+/g, " ").replace(/\b(Line No\.?\s*\d+).*$/i, "").trim();
+}
+function cleanNotes(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+function extractNearbyNotes(lines) {
+  const near = lines.join(" ");
+  const a = near.match(/Your\s+PO\s+\d+\s+Our\s+DN\s+\d+/i);
+  if (a) return a[0];
+  const b = near.match(/Line\s+No\.?\s*\d+/i);
+  if (b) return b[0];
+  return "";
+}
+function dedupeRows(input) {
+  const seen = new Set(), out = [];
+  for (const r of input) {
+    const key = [r["Invoice No"],r["PO No"],r["Part No"],r["Description"],r["Qty"],r["Amount"]]
+      .join("|").toUpperCase();
+    if (seen.has(key)) continue;
+    seen.add(key); out.push(r);
+  }
+  return out.map((r, i) => { r["#"] = i+1; return r; });
+}
+
+// ══════════════════════════════════════
+//  RENDER TABLA Y AUDITORÍA EN TIEMPO REAL
+// ══════════════════════════════════════
+function renderTable() {
+  const table = document.getElementById("resultTable");
+  table.innerHTML = "";
+  const thead = document.createElement("thead");
+  const trh   = document.createElement("tr");
+  COLUMNS.forEach(c => {
+    const th = document.createElement("th");
+    th.textContent = c;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach((row, idx) => {
+    auditRow(row);
+    const tr = document.createElement("tr");
+    if (row._auditState === "err") tr.classList.add("row-error");
+    else if (row._auditState === "warn") tr.classList.add("row-flagged");
+
+    COLUMNS.forEach(c => {
+      const td = document.createElement("td");
+      if (c === "Sel") {
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.dataset.idx = idx;
+        td.appendChild(chk);
+      } else if (c === "Audit") {
+        const span = document.createElement("span");
+        span.className = "audit-pill " + (row._auditState || "ok");
+        span.textContent = row["Audit"] || "✓ OK";
+        td.appendChild(span);
+      } else {
+        td.contentEditable = "true";
+        td.textContent = row[c] || "";
+        td.dataset.row = idx;
+        td.dataset.col = c;
+        td.addEventListener("input", e => {
+          const rIdx = Number(e.target.dataset.row);
+          rows[rIdx][e.target.dataset.col] = e.target.textContent.trim();
+          auditRow(rows[rIdx]);
+          const parentTr = e.target.closest("tr");
+          parentTr.className = rows[rIdx]._auditState === "err" ? "row-error" : (rows[rIdx]._auditState === "warn" ? "row-flagged" : "");
+          const pill = parentTr.querySelector(".audit-pill");
+          if (pill) {
+            pill.className = "audit-pill " + (rows[rIdx]._auditState || "ok");
+            pill.textContent = rows[rIdx]["Audit"];
+          }
+          updateKpis();
+          persistData();
+        });
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  updateKpis();
+}
+
+function updateKpis() {
+  document.getElementById("kRows").textContent = rows.length;
+  document.getElementById("kInvoices").textContent = unique(rows.map(r => r["Invoice No"])).length;
+  document.getElementById("kQty").textContent =
+    rows.reduce((s, r) => s + parseNumber(r["Qty"]), 0).toLocaleString("es-CL");
+  document.getElementById("kAmount").textContent =
+    rows.reduce((s, r) => s + parseNumber(r["Amount"]), 0)
+      .toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const totalGW = rows.reduce((s, r) => s + parseNumber(r["G.W.(kg)"]), 0);
+  const totalNW = rows.reduce((s, r) => s + parseNumber(r["N.W.(kg)"]), 0);
+  const totalVol = rows.reduce((s, r) => s + parseNumber(r["Vol.(m3)"]), 0);
+
+  document.getElementById("kWeight").textContent =
+    totalGW.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const errCount = rows.filter(r => r._auditState === "err" || r._auditState === "warn").length;
+  const auditCard = document.getElementById("kpiAuditCard");
+  const auditVal  = document.getElementById("kAudit");
+  const auditLbl  = document.getElementById("kAuditLabel");
+  const banner    = document.getElementById("auditBanner");
+
+  auditLbl.textContent = `N.W: ${totalNW.toLocaleString("es-CL")} kg | Vol: ${totalVol.toLocaleString("es-CL", {minimumFractionDigits:2, maximumFractionDigits:3})} m³`;
+
+  if (!rows.length) {
+    auditCard.className = "kpi";
+    auditVal.textContent = "—";
+    banner.className = "audit-banner";
+    return;
+  }
+
+  if (errCount > 0) {
+    auditCard.className = "kpi kpi-alert";
+    auditVal.textContent = `⚠ ${errCount} ALERTA(S)`;
+    banner.className = "audit-banner show-err";
+    banner.textContent = `⛔ AUDITORÍA ADUANERA: Se detectaron ${errCount} fila(s) con descuadre matemático (Qty × Unit Price ≠ Amount) o inconsistencia de pesos (N.W. > G.W.). Revise las filas marcadas en rojo antes de transmitir a SNA / SUNAT o SIDEMAR.`;
+  } else {
+    auditCard.className = "kpi kpi-ok";
+    auditVal.textContent = "✓ 100% CUADRADO";
+    banner.className = "audit-banner show-ok";
+    banner.textContent = `✓ CUADRATURA VERIFICADA: ${rows.length} ítems validados sin discrepancias aritméticas ni de peso bruto/neto.`;
+  }
+}
+
+// ══════════════════════════════════════
+//  ACCIONES DE TABLA Y EXPORTACIÓN
+// ══════════════════════════════════════
+function addEmptyRow() {
+  rows.push(auditRow(makeRow({ "#": rows.length + 1 })));
+  renderTable();
+  persistData();
+}
+
+function deleteSelectedRows() {
+  const selected = Array.from(document.querySelectorAll("#resultTable input[type=checkbox]"))
+    .filter(c => c.checked).map(c => Number(c.dataset.idx));
+  if (!selected.length) { setStatus("No hay filas seleccionadas.", "warn"); return; }
+  rows = rows.filter((_, i) => !selected.includes(i));
+  rows.forEach((r, i) => r["#"] = i + 1);
+  renderTable();
+  persistData();
+  setStatus(`🗑 Filas eliminadas: ${selected.length}`, "ok");
+}
+
+function exportXLSX() {
+  if (!rows.length) { setStatus("No hay datos para exportar.", "warn"); return; }
+  if (!window.XLSX)  { setStatus("No cargó la librería Excel.", "error"); return; }
+  const cols = COLUMNS.filter(c => c !== "Sel");
+  const data = rows.map(r => { const o = {}; cols.forEach(c => o[c] = r[c] || ""); return o; });
+  const ws = XLSX.utils.json_to_sheet(data, { header: cols });
+  ws["!cols"] = cols.map(c => ({ wch: Math.max(14, c.length + 4) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Martiline Auditor V4");
+  XLSX.writeFile(wb, `Martiline_Customs_Auditor_V4_${new Date().toISOString().slice(0,10)}.xlsx`);
+  setStatus("✓ Exportado a Excel correctamente.", "ok");
+}
+
+function exportCSV() {
+  if (!rows.length) { setStatus("No hay datos para exportar.", "warn"); return; }
+  const cols = COLUMNS.filter(c => c !== "Sel");
+  const lines = [cols.join(";")];
+  rows.forEach(r => lines.push(cols.map(c => csvEscape(r[c] || "")).join(";")));
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `Martiline_Customs_Auditor_V4_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus("✓ Exportado a CSV correctamente.", "ok");
+}
+
+function csvEscape(v) {
+  let s = String(v).replace(/"/g, '""');
+  if (/[;"\n]/.test(s)) s = '"' + s + '"';
+  return s;
+}
+
+// ══════════════════════════════════════
+//  PERSISTENCIA localStorage
+// ══════════════════════════════════════
+const STORAGE_KEY = "martiline_parser_v4_rows";
+const TEXT_KEY    = "martiline_parser_v4_text";
+
+function persistData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    localStorage.setItem(TEXT_KEY, lastExtractedText.slice(0, 50000));
+    const ts = new Date().toLocaleTimeString("es-CL");
+    document.getElementById("persistInfo").textContent =
+      `Guardado automáticamente a las ${ts}`;
+    document.getElementById("persistBadge").textContent =
+      `💾 ${rows.length} filas guardadas`;
+  } catch (e) {
+    document.getElementById("persistInfo").textContent =
+      "No se pudo guardar (localStorage no disponible)";
+  }
+}
+
+function loadPersistedData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const savedText = localStorage.getItem(TEXT_KEY);
+    if (saved) {
+      rows = JSON.parse(saved).map(auditRow);
+      lastExtractedText = savedText || "";
+      if (lastExtractedText)
+        document.getElementById("preview").textContent = lastExtractedText.slice(0, 14000);
+      renderTable();
+      document.getElementById("persistInfo").textContent =
+        `Sesión restaurada — ${rows.length} filas cargadas`;
+      document.getElementById("persistBadge").textContent =
+        `💾 ${rows.length} filas guardadas`;
+    }
+  } catch (e) {}
+}
+
+// ══════════════════════════════════════
+//  DEMOS ANONIMIZADOS (Cero datos sensibles de clientes)
+// ══════════════════════════════════════
+function loadDemo() {
+  const demo = `1 9400100101 4500100201 P025A10 SLURRY PUMP ENDCOVER SHIM SET 1 PCS CRATE01 3926.90 25,00 AUD 25,00 Pacific Mining Supplies Ltd Australia Your PO 4500100201 Our DN 00109001
+2 9400100101 4500100202 P025A10 SLURRY PUMP ENDCOVER SHIM SET 4 PCS CRATE01 3926.90 25,00 AUD 100,00 Pacific Mining Supplies Ltd Australia Your PO 4500100202 Our DN 00109002
+3 9400100101 4500100203 V55012S VOLUTE LINER SEAL ASSEMBLY 550MM 6 PCS CRATE02 4016.93 150,00 AUD 900,00 Pacific Mining Supplies Ltd Australia Your PO 4500100203 Our DN 00109003
+4 9040200301 4500100305 VB30CW100 VALVE SLEEVE MOLDED ELASTOMER 3 EA 84819090 120,00 USD 360,00 IndoTech Industrial Pvt Limited India Line No. 10`;
+  document.getElementById("rawText").value = demo;
+  parseFromTextarea();
+}
+
+function loadDemoGeneric() {
+  const demo = `COMMERCIAL INVOICE
+Invoice No: INV-2026-0900
+Date: 2026-10-30
+Supplier: Andean Rock Tools SpA
+Origin: Chile
+
+Part No       Description                          Qty   UOM   Unit Price  Amount    HS Code
+R38-DR-001    Extension Drill Rod R38 x 3.0m       20    PCS   180,00      3600,00   7228.20
+T51-AD-002    Hexagon Shank Adapter T51-R38        10    PCS   95,00       950,00    7228.20
+BT-48-003     Spherical Button Bit 48mm            30    PCS   45,00       1350,00   8207.20
+CP-R38-004    Threaded Coupling Sleeve R38         50    PCS   22,00       1100,00   7228.20`;
+  document.getElementById("rawText").value = demo;
+  parseFromTextarea();
+}
+
+function loadDemoChina() {
+  const demo = [
+    "PACKING LIST\t\t\tDelivery NO.:\t6009900123",
+    "Consignee:\tImportadora Industrial Lima S.A.C. - Callao, PERU\t\tPRICE TERMS:\tEXW Shanghai",
+    ["WEPS PO#", "PO#", "Item no.", "CRATE", "Part#", "Qty.", "N. W.(KGS)", "G. W.(KGS)", "Meas.(M3)", "品名", "供应商", "提货地址", "Unit Price", "Amount", "Currency"].join("\t"),
+    ["4509900101", "4508800101", "00010", "C-01", "MCR-650-COVER", "2", "4800", "5150", "8.450", "泵配件 (Pump Cover Casting)", "Shanghai Heavy Foundry Co., Ltd.", "Shanghai, China", "3200.00", "6400.00", "USD"].join("\t"),
+    ["4509900102", "4508800102", "00020", "C-02", "MCR-650-CASING", "1", "6900", "7320", "11.200", "泵壳 (Main Volute Casing)", "Shanghai Heavy Foundry Co., Ltd.", "Shanghai, China", "8500.00", "8500.00", "USD"].join("\t")
+  ].join("\n");
+  document.getElementById("rawText").value = demo;
+  parseFromTextarea();
+}
+
+function loadDemoDiscrepancy() {
+  const demo = [
+    "COMMERCIAL INVOICE & PACKING LIST\t\t\tDelivery NO.:\tINV-ERR-2026",
+    "Supplier:\tGlobal Industrial Exports Ltd\t\tCurrency:\tUSD",
+    ["PO#", "Part#", "Description", "Qty.", "UOM", "N. W.(KGS)", "G. W.(KGS)", "Meas.(M3)", "HS Code", "Unit Price", "Amount", "Currency"].join("\t"),
+    ["4500991100", "PUMP-IMP-01", "Impeller High Chrome 450mm (Cuadrado OK)", "4", "PCS", "1200", "1320", "3.20", "8413.91", "850.00", "3400.00", "USD"].join("\t"),
+    ["4500991101", "SEAL-KIT-02", "Mechanical Seal Cartridge (Error Multiplicación)", "10", "PCS", "150", "175", "0.65", "8484.20", "125.00", "1350.00", "USD"].join("\t"),
+    ["4500991102", "LINER-PLT-03", "Wear Plate Liner (Error Peso Neto > Bruto)", "2", "PCS", "980", "850", "1.40", "8413.91", "600.00", "1200.00", "USD"].join("\t")
+  ].join("\n");
+  document.getElementById("rawText").value = demo;
+  parseFromTextarea();
+  setStatus("⚠ Demo de Auditoría cargado: observa las alertas rojas de descuadre en la tabla.", "warn");
+}
+
+function clearAll() {
+  rows = []; lastExtractedText = ""; lastExcelStructure = null;
+  document.getElementById("rawText").value = "";
+  document.getElementById("fileInput").value = "";
+  document.getElementById("preview").textContent = "El texto extraído aparecerá aquí...";
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TEXT_KEY);
+  } catch(e) {}
+  renderTable();
+  document.getElementById("persistBadge").textContent = "💾 Sin datos guardados";
+  document.getElementById("persistInfo").textContent = "Los datos se guardan automáticamente en este navegador.";
+  setStatus("Limpio. Listo para nuevos documentos.");
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+loadPersistedData();
+if (!rows.length) renderTable();
+</script>
+</body>
+</html>
